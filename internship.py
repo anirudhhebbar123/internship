@@ -52,7 +52,6 @@ preprocessor = ColumnTransformer(
 # Handle transformation
 try:
     X = preprocessor.fit_transform(X)
-    st.write(f"Transformed Feature Shape: {X.shape}")
 except ValueError as e:
     st.error(f"Error during feature transformation: {e}")
     st.stop()
@@ -86,7 +85,7 @@ r2 = r2_score(Y_test, Y_pred_test)
 
 st.write("### Model Performance Metrics")
 st.write(f"Mean Absolute Error (MAE): {mae:.2f}")
-st.write(f"Mean Squared Error (MSE): {mse:.2f}")
-st.write(f"R² Score: {r2:.2f}")
+st.write(f"Mean 
+
 
 
