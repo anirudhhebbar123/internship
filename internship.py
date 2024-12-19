@@ -89,6 +89,28 @@ st.write(f"Mean Absolute Error (MAE): {mae:.2f}")
 st.write(f"Mean Squared Error (MSE): {mse:.2f}")
 st.write(f"R² Score: {r2:.2f}")
 
+# Input form for user to enter their own values
+st.write("### Predict Math Score for New Data")
+math_score_input = st.number_input("Enter the math score:", min_value=0, max_value=100, value=50)
+reading_score_input = st.number_input("Enter the reading score:", min_value=0, max_value=100, value=50)
+writing_score_input = st.number_input("Enter the writing score:", min_value=0, max_value=100, value=50)
+
+if st.button("Predict"):
+    # Combine user input into a DataFrame for prediction
+    user_input = pd.DataFrame({
+        'math score': [math_score_input],
+        'reading score': [reading_score_input],
+        'writing score': [writing_score_input]
+    })
+    
+    # Apply preprocessing to user input
+    user_input_transformed = preprocessor.transform(user_input)
+    
+    # Predict math score for user input
+    predicted_math_score = model.predict(user_input_transformed)[0]
+    st.write(f"Predicted Math Score: {predicted_math_score:.2f}")
+
+
 
 
 
