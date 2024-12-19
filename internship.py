@@ -64,26 +64,29 @@ X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, random_
 model = DecisionTreeRegressor()
 model.fit(X_train, Y_train)
 
-# Predict on test set
-Y_pred = model.predict(X_test)
+# Predict on the entire dataset
+Y_pred_all = model.predict(X)
 
-# Create a DataFrame with Actual and Predicted values
+# Create a DataFrame with Actual and Predicted values for the entire dataset
 results_df = pd.DataFrame({
-    'Actual Math Score': Y_test.reset_index(drop=True),
-    'Predicted Math Score': Y_pred
-})
+    'Actual Math Score': Y,
+    'Predicted Math Score': Y_pred_all
+}).reset_index(drop=True)
 
-# Display the predictions
-st.write("### Predictions of Math Scores (Actual vs Predicted)")
-st.dataframe(results_df.head(10))
+# Display predictions inside an expander
+with st.expander("See All Predictions (Actual vs Predicted Math Scores)", expanded=False):
+    st.write("### Full Predictions Table")
+    st.dataframe(results_df)
 
-# Metrics
-mae = mean_absolute_error(Y_test, Y_pred)
-mse = mean_squared_error(Y_test, Y_pred)
-r2 = r2_score(Y_test, Y_pred)
+# Metrics for test data
+Y_pred_test = model.predict(X_test)
+mae = mean_absolute_error(Y_test, Y_pred_test)
+mse = mean_squared_error(Y_test, Y_pred_test)
+r2 = r2_score(Y_test, Y_pred_test)
 
 st.write("### Model Performance Metrics")
 st.write(f"Mean Absolute Error (MAE): {mae:.2f}")
 st.write(f"Mean Squared Error (MSE): {mse:.2f}")
 st.write(f"R² Score: {r2:.2f}")
+
 
