@@ -67,11 +67,15 @@ model.fit(X_train, Y_train)
 # Predict on test set
 Y_pred = model.predict(X_test)
 
-# Display only the prediction of math scores
-pred_df = pd.DataFrame({'Predicted Math Score': Y_pred}).reset_index(drop=True)
+# Create a DataFrame with Actual and Predicted values
+results_df = pd.DataFrame({
+    'Actual Math Score': Y_test.reset_index(drop=True),
+    'Predicted Math Score': Y_pred
+})
 
-st.write("### Predictions of Math Scores")
-st.dataframe(pred_df.head(10))
+# Display the predictions
+st.write("### Predictions of Math Scores (Actual vs Predicted)")
+st.dataframe(results_df.head(10))
 
 # Metrics
 mae = mean_absolute_error(Y_test, Y_pred)
@@ -82,3 +86,4 @@ st.write("### Model Performance Metrics")
 st.write(f"Mean Absolute Error (MAE): {mae:.2f}")
 st.write(f"Mean Squared Error (MSE): {mse:.2f}")
 st.write(f"R² Score: {r2:.2f}")
+
