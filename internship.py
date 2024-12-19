@@ -14,8 +14,6 @@ file_path = "StudentsPerformance.csv"
 # Load dataset
 try:
     df = pd.read_csv(file_path)
-    st.write("### Dataset Preview:")
-    st.dataframe(df.head(10))
 except FileNotFoundError:
     st.error(f"File '{file_path}' not found. Please check the file path and try again.")
     st.stop()
@@ -94,4 +92,5 @@ try:
 
 except ValueError as e:
     st.error(f"Error during prediction: {e}")
+
 
