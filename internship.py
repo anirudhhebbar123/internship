@@ -57,16 +57,43 @@ X_train, X_test, Y_train, Y_test = train_test_split(X_transformed, Y, test_size=
 model = DecisionTreeRegressor()
 model.fit(X_train, Y_train)
 
-# Input section for prediction
+# Input section for prediction (hiding the fields for 'gender', 'race/ethnicity', etc.)
 st.write("### Predict Your Own Math Score")
+
+# Setting default values for hidden inputs
+default_values = {
+    'gender': 'female',
+    'race/ethnicity': 'group B',
+    'parental level of education': 'bachelor\'s degree',
+    'lunch': 'standard',
+    'test preparation course': 'none'
+}
+
 user_input = {}
 for col in cat_features:
-    user_input[col] = st.selectbox(f"{col}", df[col].unique())
+    if col in default_values:
+        user_input[col] = default_values[col]  # Set default value without displaying
+    else:
+        user_input[col] = st.selectbox(f"{col}", df[col].unique())
+
 for col in num_features:
     user_input[col] = st.number_input(f"{col}", min_value=float(df[col].min()), max_value=float(df[col].max()))
 
 # Add a field for actual math score
 actual_math_score = st.number_input("Actual Math Score (if available)", min_value=0.0, max_value=100.0, step=1.0)
+
+# Hide the default input fields in the page
+st.markdown("""
+    <style>
+        [data-testid="stSelectbox"][label="gender"],
+        [data-testid="stSelectbox"][label="race/ethnicity"],
+        [data-testid="stSelectbox"][label="parental level of education"],
+        [data-testid="stSelectbox"][label="lunch"],
+        [data-testid="stSelectbox"][label="test preparation course"] {
+            display: none;
+        }
+    </style>
+""", unsafe_allow_html=True)
 
 # Create user input DataFrame
 user_input_df = pd.DataFrame([user_input])
@@ -92,5 +119,3 @@ try:
 
 except ValueError as e:
     st.error(f"Error during prediction: {e}")
-
-
