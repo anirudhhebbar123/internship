@@ -105,17 +105,17 @@ for col in missing_cols:
 
 user_input_df = user_input_df[X.columns]  # Reorder columns to match training data
 
-# Transform user input and predict
-try:
-    user_input_transformed = preprocessor.transform(user_input_df)
-    user_prediction = model.predict(user_input_transformed)
+# When the user clicks the 'Submit' button, predict and display the math score
+if st.button("Submit"):
+    # Transform user input and predict
+    try:
+        user_input_transformed = preprocessor.transform(user_input_df)
+        user_prediction = model.predict(user_input_transformed)
 
-    # Display prediction along with actual math score (if provided)
-    if actual_math_score > 0:
+        # Display prediction along with actual math score (if provided)
         st.write(f"Predicted Math Score: {user_prediction[0]:.2f}")
-        st.write(f"Actual Math Score: {actual_math_score:.2f}")
-    else:
-        st.write(f"Predicted Math Score: {user_prediction[0]:.2f}")
+        if actual_math_score > 0:
+            st.write(f"Actual Math Score: {actual_math_score:.2f}")
 
-except ValueError as e:
-    st.error(f"Error during prediction: {e}")
+    except ValueError as e:
+        st.error(f"Error during prediction: {e}")
