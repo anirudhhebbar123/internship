@@ -1,9 +1,7 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeRegressor
-from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.compose import ColumnTransformer
 
@@ -28,10 +26,8 @@ if 'total score' not in df.columns or 'avg score' not in df.columns:
     df['avg score'] = df[['math score', 'reading score', 'writing score']].mean(axis=1)
 
 # Preprocessing
-st.write("### Preprocessing and Feature Transformation")
 columns_to_drop = ['total score', 'avg score', 'math score']
 
-# Safely drop columns that exist in the dataset
 X = df.drop(columns=[col for col in columns_to_drop if col in df.columns], axis=1)
 Y = df['math score']
 
@@ -49,66 +45,53 @@ preprocessor = ColumnTransformer(
     ]
 )
 
-# Handle transformation
+# Transform features
 try:
-    X = preprocessor.fit_transform(X)
-    st.write(f"Transformed Feature Shape: {X.shape}")
+    X_transformed = preprocessor.fit_transform(X)
 except ValueError as e:
     st.error(f"Error during feature transformation: {e}")
     st.stop()
 
 # Train-test split
-X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, random_state=42)
+X_train, X_test, Y_train, Y_test = train_test_split(X_transformed, Y, test_size=0.2, random_state=42)
 
 # Train model
 model = DecisionTreeRegressor()
 model.fit(X_train, Y_train)
 
-# Predict on the entire dataset
-Y_pred_all = model.predict(X)
+# Input section for prediction
+st.write("### Predict Your Own Math Score")
+user_input = {}
+for col in cat_features:
+    user_input[col] = st.selectbox(f"{col}", df[col].unique())
+for col in num_features:
+    user_input[col] = st.number_input(f"{col}", min_value=float(df[col].min()), max_value=float(df[col].max()))
 
-# Create a DataFrame with Actual and Predicted values for the entire dataset
-results_df = pd.DataFrame({
-    'Actual Math Score': Y,
-    'Predicted Math Score': Y_pred_all
-}).reset_index(drop=True)
+# Add a field for actual math score
+actual_math_score = st.number_input("Actual Math Score (if available)", min_value=0.0, max_value=100.0, step=1.0)
 
-# Display predictions inside an expander
-with st.expander("See All Predictions (Actual vs Predicted Math Scores)", expanded=False):
-    st.write("### Full Predictions Table")
-    st.dataframe(results_df)
+# Create user input DataFrame
+user_input_df = pd.DataFrame([user_input])
 
-# Metrics for test data
-Y_pred_test = model.predict(X_test)
-mae = mean_absolute_error(Y_test, Y_pred_test)
-mse = mean_squared_error(Y_test, Y_pred_test)
-r2 = r2_score(Y_test, Y_pred_test)
+# Align user input DataFrame with the expected feature columns
+missing_cols = set(X.columns) - set(user_input_df.columns)
+for col in missing_cols:
+    user_input_df[col] = 0  # Fill missing columns with default values
 
-st.write("### Model Performance Metrics")
-st.write(f"Mean Absolute Error (MAE): {mae:.2f}")
-st.write(f"Mean Squared Error (MSE): {mse:.2f}")
-st.write(f"R² Score: {r2:.2f}")
+user_input_df = user_input_df[X.columns]  # Reorder columns to match training data
 
-# Input form for user to enter their own values
-st.write("### Predict Math Score for New Data")
-actual_math_score_input = st.number_input("Enter the actual math score:", min_value=0, max_value=100, value=50)
-reading_score_input = st.number_input("Enter the reading score:", min_value=0, max_value=100, value=50)
-writing_score_input = st.number_input("Enter the writing score:", min_value=0, max_value=100, value=50)
+# Transform user input and predict
+try:
+    user_input_transformed = preprocessor.transform(user_input_df)
+    user_prediction = model.predict(user_input_transformed)
 
-if st.button("Predict"):
-    # Combine user input into a DataFrame for prediction
-    user_input = pd.DataFrame({
-        'math score': [actual_math_score_input],
-        'reading score': [reading_score_input],
-        'writing score': [writing_score_input]
-    })
-    
-    # Apply preprocessing to user input
-    user_input_transformed = preprocessor.transform(user_input)
-    
-    # Predict math score for user input
-    predicted_math_score = model.predict(user_input_transformed)[0]
-    
-    # Display both actual and predicted math scores
-    st.write(f"Actual Math Score: {actual_math_score_input:.2f}")
-    st.write(f"Predicted Math Score: {predicted_math_score:.2f}")
+    # Display prediction along with actual math score (if provided)
+    if actual_math_score > 0:
+        st.write(f"Predicted Math Score: {user_prediction[0]:.2f}")
+        st.write(f"Actual Math Score: {actual_math_score:.2f}")
+    else:
+        st.write(f"Predicted Math Score: {user_prediction[0]:.2f}")
+
+except ValueError as e:
+    st.error(f"Error during prediction: {e}")
+
