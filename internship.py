@@ -39,41 +39,45 @@ input_data = pd.DataFrame({
 # Load dataset
 data = pd.read_csv('StudentsPerformance.csv')
 
-# Encoding categorical features
-encoders = {}
-for col in ['gender', 'race/ethnicity', 'parental level of education', 'lunch', 'test preparation course']:
-    le = LabelEncoder()
-    data[col] = le.fit_transform(data[col])
-    encoders[col] = le
+# Check if 'performance' column exists
+if 'performance' not in data.columns:
+    st.error("The dataset is missing the 'performance' column. Please ensure the dataset is correct.")
+else:
+    # Encoding categorical features
+    encoders = {}
+    for col in ['gender', 'race/ethnicity', 'parental level of education', 'lunch', 'test preparation course']:
+        le = LabelEncoder()
+        data[col] = le.fit_transform(data[col])
+        encoders[col] = le
 
-# Scaling numerical features
-scaler = MinMaxScaler()
-numerical_columns = ['math score', 'reading score', 'writing score']
-data[numerical_columns] = scaler.fit_transform(data[numerical_columns])
+    # Scaling numerical features
+    scaler = MinMaxScaler()
+    numerical_columns = ['math score', 'reading score', 'writing score']
+    data[numerical_columns] = scaler.fit_transform(data[numerical_columns])
 
-# Splitting data for training and testing
-X = data.drop('performance', axis=1)
-y = data['performance']
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    # Splitting data for training and testing
+    X = data.drop('performance', axis=1)
+    y = data['performance']
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# Model training
-model = RandomForestClassifier(random_state=42)
-model.fit(X_train, y_train)
+    # Model training
+    model = RandomForestClassifier(random_state=42)
+    model.fit(X_train, y_train)
 
-# Testing accuracy (optional for display)
-y_pred = model.predict(X_test)
-st.write("Model Accuracy on Test Data:", accuracy_score(y_test, y_pred))
+    # Testing accuracy (optional for display)
+    y_pred = model.predict(X_test)
+    st.write("Model Accuracy on Test Data:", accuracy_score(y_test, y_pred))
 
-# Preprocess user input
-def preprocess_input(input_df):
-    for col, encoder in encoders.items():
-        input_df[col] = encoder.transform(input_df[col])
-    input_df[numerical_columns] = scaler.transform(input_df[numerical_columns])
-    return input_df
+    # Preprocess user input
+    def preprocess_input(input_df):
+        for col, encoder in encoders.items():
+            input_df[col] = encoder.transform(input_df[col])
+        input_df[numerical_columns] = scaler.transform(input_df[numerical_columns])
+        return input_df
 
-input_data_processed = preprocess_input(input_data)
+    input_data_processed = preprocess_input(input_data)
 
-# Predict
-if st.button("Predict"):
-    prediction = model.predict(input_data_processed)
-    st.write("Predicted Outcome:", "High Performance" if prediction[0] == 1 else "Low Performance")
+    # Predict
+    if st.button("Predict"):
+        prediction = model.predict(input_data_processed)
+        st.write("Predicted Outcome:", "High Performance" if prediction[0] == 1 else "Low Performance")
