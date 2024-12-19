@@ -37,7 +37,7 @@ input_data = pd.DataFrame({
 })
 
 # Load dataset
-data = pd.read_csv('/content/StudentsPerformance.csv')
+data = pd.read_csv('StudentsPerformance.csv')
 
 # Encoding categorical features
 encoders = {}
