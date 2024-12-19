@@ -5,14 +5,6 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
-# Function for evaluating the model
-def evaluate_model(true, predicted):
-    mae = mean_absolute_error(true, predicted)
-    mse = mean_squared_error(true, predicted)
-    rmse = np.sqrt(mean_squared_error(true, predicted))
-    r2_square = r2_score(true, predicted)
-    return mae, rmse, r2_square
-
 # Streamlit app
 st.title("Math Score Prediction App")
 
@@ -25,12 +17,12 @@ if uploaded_file is not None:
     st.write("### Dataset Preview:")
     st.dataframe(df.head())
 
-    # Select features and target
-    st.write("### Select Features and Target")
-    features = st.multiselect("Select feature columns:", options=df.columns)
-    target = st.selectbox("Select target column:", options=df.columns)
+    # Preprocessing (adjust as per the notebook logic)
+    st.write("### Preprocessing and Feature Selection")
+    features = ['reading_score', 'writing_score']  # Example features from the notebook
+    target = 'math_score'  # Example target column from the notebook
 
-    if features and target:
+    if all(col in df.columns for col in features + [target]):
         X = df[features]
         Y = df[target]
 
@@ -45,7 +37,9 @@ if uploaded_file is not None:
         Y_pred = lin_model.predict(X_test)
 
         # Evaluate the model
-        mae, rmse, r2 = evaluate_model(Y_test, Y_pred)
+        mae = mean_absolute_error(Y_test, Y_pred)
+        rmse = np.sqrt(mean_squared_error(Y_test, Y_pred))
+        r2 = r2_score(Y_test, Y_pred)
 
         st.write("### Model Evaluation")
         st.write(f"- Mean Absolute Error (MAE): {mae:.2f}")
@@ -56,11 +50,15 @@ if uploaded_file is not None:
         st.write("### Predict for New Input")
         input_data = {}
         for feature in features:
-            input_value = st.number_input(f"{feature}", value=0.0)
+            input_value = st.number_input(f"Enter {feature}", value=0.0)
             input_data[feature] = input_value
 
         if st.button("Predict Math Score"):
             input_df = pd.DataFrame([input_data])
             prediction = lin_model.predict(input_df)
             st.write(f"### Predicted Math Score: {prediction[0]:.2f}")
+    else:
+        st.write("### Error: Required columns not found in the dataset.")
+        st.write(f"Expected features: {features + [target]}")
+
 
