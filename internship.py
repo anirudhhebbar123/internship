@@ -1,84 +1,66 @@
-# -*- coding: utf-8 -*-
-
-import numpy as np
-import pandas as pd
 import streamlit as st
-from sklearn.preprocessing import LabelEncoder, MinMaxScaler
-from sklearn.ensemble import RandomForestClassifier
+import pandas as pd
+import numpy as np
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
-# Streamlit setup
-st.title("Student Performance Prediction")
-st.write("This app predicts student performance based on input features.")
+# Function for evaluating the model
+def evaluate_model(true, predicted):
+    mae = mean_absolute_error(true, predicted)
+    mse = mean_squared_error(true, predicted)
+    rmse = np.sqrt(mean_squared_error(true, predicted))
+    r2_square = r2_score(true, predicted)
+    return mae, rmse, r2_square
 
-# Input data from the user
-gender = st.selectbox("Gender", ["male", "female"])
-race_ethnicity = st.selectbox("Race/Ethnicity", ["group A", "group B", "group C", "group D", "group E"])
-parental_education = st.selectbox("Parental Level of Education", [
-    "some high school", "high school", "some college", "associate's degree", "bachelor's degree", "master's degree"
-])
-lunch = st.selectbox("Lunch", ["standard", "free/reduced"])
-test_prep = st.selectbox("Test Preparation Course", ["none", "completed"])
-math_score = st.slider("Math Score", 0, 100, 75)
-reading_score = st.slider("Reading Score", 0, 100, 75)
-writing_score = st.slider("Writing Score", 0, 100, 75)
+# Streamlit app
+st.title("Math Score Prediction App")
 
-# Combine inputs into a DataFrame
-input_data = pd.DataFrame({
-    'gender': [gender],
-    'race/ethnicity': [race_ethnicity],
-    'parental level of education': [parental_education],
-    'lunch': [lunch],
-    'test preparation course': [test_prep],
-    'math score': [math_score],
-    'reading score': [reading_score],
-    'writing score': [writing_score]
-})
+# Upload dataset
+uploaded_file = st.file_uploader("Upload your dataset (CSV format)", type="csv")
 
-# Load dataset
-data = pd.read_csv('StudentsPerformance.csv')
+if uploaded_file is not None:
+    # Load dataset
+    df = pd.read_csv(uploaded_file)
+    st.write("### Dataset Preview:")
+    st.dataframe(df.head())
 
-# Create 'performance' column based on average score
-if 'performance' not in data.columns:
-    data['performance'] = (data['math score'] + data['reading score'] + data['writing score']) / 3
-    data['performance'] = (data['performance'] >= 60).astype(int)
+    # Select features and target
+    st.write("### Select Features and Target")
+    features = st.multiselect("Select feature columns:", options=df.columns)
+    target = st.selectbox("Select target column:", options=df.columns)
 
-# Encoding categorical features
-encoders = {}
-for col in ['gender', 'race/ethnicity', 'parental level of education', 'lunch', 'test preparation course']:
-    le = LabelEncoder()
-    data[col] = le.fit_transform(data[col])
-    encoders[col] = le
+    if features and target:
+        X = df[features]
+        Y = df[target]
 
-# Scaling numerical features
-scaler = MinMaxScaler()
-numerical_columns = ['math score', 'reading score', 'writing score']
-data[numerical_columns] = scaler.fit_transform(data[numerical_columns])
+        # Train-test split
+        X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, random_state=42)
 
-# Splitting data for training and testing
-X = data.drop('performance', axis=1)
-y = data['performance']
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+        # Train model
+        lin_model = LinearRegression()
+        lin_model.fit(X_train, Y_train)
 
-# Model training
-model = RandomForestClassifier(random_state=42)
-model.fit(X_train, y_train)
+        # Predict on test set
+        Y_pred = lin_model.predict(X_test)
 
-# Testing accuracy (optional for display)
-y_pred = model.predict(X_test)
-st.write("Model Accuracy on Test Data:", accuracy_score(y_test, y_pred))
+        # Evaluate the model
+        mae, rmse, r2 = evaluate_model(Y_test, Y_pred)
 
-# Preprocess user input
-def preprocess_input(input_df):
-    for col, encoder in encoders.items():
-        input_df[col] = encoder.transform(input_df[col])
-    input_df[numerical_columns] = scaler.transform(input_df[numerical_columns])
-    return input_df
+        st.write("### Model Evaluation")
+        st.write(f"- Mean Absolute Error (MAE): {mae:.2f}")
+        st.write(f"- Root Mean Squared Error (RMSE): {rmse:.2f}")
+        st.write(f"- R2 Score: {r2:.2f}")
 
-input_data_processed = preprocess_input(input_data)
+        # Option to predict for new input
+        st.write("### Predict for New Input")
+        input_data = {}
+        for feature in features:
+            input_value = st.number_input(f"{feature}", value=0.0)
+            input_data[feature] = input_value
 
-# Predict
-if st.button("Predict"):
-    prediction = model.predict(input_data_processed)
-    st.write("Predicted Outcome:", "High Performance" if prediction[0] == 1 else "Low Performance")
+        if st.button("Predict Math Score"):
+            input_df = pd.DataFrame([input_data])
+            prediction = lin_model.predict(input_df)
+            st.write(f"### Predicted Math Score: {prediction[0]:.2f}")
+
