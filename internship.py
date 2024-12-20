@@ -120,5 +120,5 @@ if st.button("Submit"):
     except ValueError as e:
         st.error(f"Error during prediction: {e}")
 
-dont change any functionalit instead of reading score and writing score which is diplayed in page makethis to display as  total score and average score
+
 
