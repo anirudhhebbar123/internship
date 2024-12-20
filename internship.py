@@ -8,7 +8,7 @@ from sklearn.preprocessing import StandardScaler
 st.title("Math Score Prediction App")
 
 # Use a fixed file path for StudentsPerformance.csv
-file_path = "/mnt/data/StudentsPerformance.csv"  # Adjusted to the uploaded file path
+file_path = "StudentsPerformance.csv"  # Adjusted to the uploaded file path
 
 # Load dataset
 try:
