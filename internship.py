@@ -77,7 +77,18 @@ for col in cat_features:
         user_input[col] = st.selectbox(f"{col}", df[col].unique())
 
 for col in num_features:
-    user_input[col] = st.number_input(f"{col}", min_value=float(df[col].min()), max_value=float(df[col].max()))
+    if col == 'reading score':
+        user_input['total score'] = st.number_input(
+            "Total Score", min_value=float(df['total score'].min()), max_value=float(df['total score'].max())
+        )
+    elif col == 'writing score':
+        user_input['avg score'] = st.number_input(
+            "Average Score", min_value=float(df['avg score'].min()), max_value=float(df['avg score'].max())
+        )
+    else:
+        user_input[col] = st.number_input(
+            f"{col}", min_value=float(df[col].min()), max_value=float(df[col].max())
+        )
 
 # Add a field for actual math score
 actual_math_score = st.number_input("Actual Math Score (if available)", min_value=0.0, max_value=100.0, step=1.0)
@@ -119,3 +130,4 @@ if st.button("Submit"):
 
     except ValueError as e:
         st.error(f"Error during prediction: {e}")
+
